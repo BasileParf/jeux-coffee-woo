@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Mini‑jeu : Café & Sucre</title>
+  <style>
+    /* --- STYLE SIMPLE ET LISIBLE --- */
+    :root{
+      --bg:#f5efe6;          /* fond crème */
+      --coffee:#6b3e2e;      /* marron café */
+      --sugar:#ffffff;       /* blanc sucre */
+      --ink:#222;            /* texte */
+      --accent:#ffb703;      /* accent (bouton) */
+      --danger:#e63946;      /* rouge (perte de vie) */
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color:var(--ink);
+      background:linear-gradient(180deg, #faf6f0, #efe6d9);
+      display:grid;
+      place-items:center;
+      min-height:100dvh;
+    }
+
+    /* Zone de jeu fixe pour rester simple et compréhensible */
+    .wrap{
+      width: 420px;            /* largeur fixe = code plus simple */
+      padding: 10px 10px 0;
+    }
+    #hud{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      background:#fff7;
+      backdrop-filter: blur(3px);
+      padding:8px 10px;
+      border:1px solid #0001;
+      border-bottom:none;
+      border-radius:12px 12px 0 0;
+    }
+    #hud b{font-weight:700}
+
+    #game{
+      position:relative;
+      width:100%;
+      height: 640px;           /* hauteur fixe = collisions plus simples */
+      background:var(--bg);
+      overflow:hidden;
+      border:1px solid #0001;
+      border-top:none;
+      border-radius:0 0 12px 12px;
+      box-shadow: 0 10px 25px #00000012;
+      cursor: crosshair;       /* rappelle qu'on joue à la souris */
+    }
+
+    /* Tasse (décor) au bas de l'écran */
+    .cup{
+      position:absolute;
+      bottom:18px;
+      left:50%;
+      transform:translateX(-50%);
+      width:120px; height:60px;
+      border-radius:0 0 16px 16px;
+      background:#fff;
+      border:2px solid #ddd;
+      box-shadow: inset 0 8px 0 0 #d2c6b8; /* café dans la tasse */
+    }
+    .cup:after{ /* anse */
+      content:""; position:absolute; right:-18px; top:14px;
+      width:28px; height:28px; border:4px solid #ddd; border-radius:50%;
+      background:transparent;
+    }
+
+    /* Goutte de café (cercle simple → ultra lisible) */
+    .drop{
+      position:absolute;
+      width:20px; height:20px;
+      background:var(--coffee);
+      border-radius:50%;
+      box-shadow: 0 4px 0 #553023;
+      pointer-events:auto;            /* on doit pouvoir "entrer" dedans avec la souris */
+    }
+    .drop.hit{ outline:3px solid var(--danger); }
+
+    /* Carré de sucre (immobile, à supprimer en le survolant) */
+    .sugar{
+      position:absolute;
+      width:24px; height:24px;
+      background:var(--sugar);
+      border:2px solid #e6e6e6;
+      box-shadow: 0 2px 0 #e0e0e0;
+    }
+
+    /* Écrans Start / Game Over */
+    .overlay{
+      position:absolute; inset:0;
+      display:grid; place-items:center;
+      background:#00000055; color:#fff;
+    }
+    .panel{
+      background:#ffffff;
+      color:#222;
+      width:85%; max-width:340px;
+      border-radius:12px; padding:18px;
+      text-align:center;
+      box-shadow:0 12px 30px #00000022;
+    }
+    .panel h1{ margin:6px 0 8px; font-size:22px; }
+    .panel p{ margin:6px 0; }
+    .panel button{
+      appearance:none; border:none; border-radius:10px;
+      background:var(--accent); color:#111; font-weight:700;
+      padding:10px 14px; margin-top:10px; cursor:pointer;
+    }
+
+    /* Petite vibration de l'écran quand on perd une vie */
+    .shake{ animation:shake .2s; }
+    @keyframes shake{ 25%{transform:translateX(4px)} 50%{transform:translateX(-4px)} 75%{transform:translateX(2px)} }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div id="hud">
+      <div>Score : <b id="score">0</b></div>
+      <div>Vies : <b id="lives">❤️❤️❤️</b></div>
+      <div>Niveau : <b id="level">1</b></div>
+    </div>
+
+    <div id="game">
+      <div class="cup" aria-hidden="true"></div>
+
+      <!-- Écran de démarrage -->
+      <div class="overlay" id="start">
+        <div class="panel">
+          <h1>☕ Café & Sucre</h1>
+          <p>Survole les <b>carrés de sucre</b> pour marquer des points.<br>
+          <b>NE SURVOLE PAS</b> les <b>gouttes de café</b> !</p>
+          <p>Le jeu accélère avec le temps. Tu as <b>3 vies</b>.</p>
+          <button id="btnStart">Jouer</button>
+        </div>
+      </div>
+
+      <!-- Écran Game Over (caché au départ) -->
+      <div class="overlay" id="gameover" style="display:none">
+        <div class="panel">
+          <h1>Fin de partie</h1>
+          <p>Score : <b id="finalScore">0</b></p>
+          <button id="btnRestart">Rejouer</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // === CODE TRÈS SIMPLE, PAS DE CLASSES, JUSTE QUELQUES FONCTIONS ===
+    const game = document.getElementById('game');
+    const scoreEl = document.getElementById('score');
+    const livesEl = document.getElementById('lives');
+    const levelEl = document.getElementById('level');
+    const startScreen = document.getElementById('start');
+    const overScreen = document.getElementById('gameover');
+    const finalScoreEl = document.getElementById('finalScore');
+
+    let running = false;
+    let score = 0;
+    let lives = 3;
+    let level = 1;
+
+    // Vitesse et rythme de base (augmente avec le temps)
+    let speedMultiplier = 1;          // multiplie la vitesse des gouttes
+    let dropIntervalMs = 900;         // fréquence d'apparition des gouttes
+    let sugarIntervalMs = 1100;       // fréquence d'apparition des sucres
+
+    // IDs pour pouvoir arrêter les timers / l'animation
+    let rafId = 0;
+    let dropTimer = 0;
+    let sugarTimer = 0;
+    let levelTimer = 0;
+
+    // Dimensions utiles
+    const W = () => game.clientWidth;
+    const H = () => game.clientHeight;
+
+    // --- UTILITAIRES D'AFFICHAGE ---
+    function setScore(v){ score = v; scoreEl.textContent = score; }
+    function setLives(v){
+      lives = v;
+      const hearts = ['','❤️','❤️❤️','❤️❤️❤️'][Math.max(0, Math.min(3, lives))];
+      livesEl.textContent = hearts;
+    }
+    function setLevel(v){ level = v; levelEl.textContent = level; }
+
+    // --- CRÉATION D'OBJETS ---
+    function spawnDrop(){
+      const d = document.createElement('div');
+      d.className = 'drop';
+      const size = 14 + Math.random()*14;      // taille aléatoire => jeu vivant
+      d.style.width = size+'px';
+      d.style.height = size+'px';
+      d.style.left = Math.random()*(W()-size) + 'px';
+      d.style.top = -size + 'px';
+      d.dataset.speed = (1.3 + Math.random()*1.7).toFixed(2); // px/frame de base
+
+      // Survol d'une goutte = on perd 1 vie
+      d.addEventListener('mouseenter', () => {
+        if(!running) return;
+        d.classList.add('hit');
+        loseLife();
+        d.remove();
+      });
+      game.appendChild(d);
+    }
+
+    function spawnSugar(){
+      const s = document.createElement('div');
+      s.className = 'sugar';
+      const size = 22;
+      s.style.width = s.style.height = size+'px';
+      const pad = 10;
+      s.style.left = (pad + Math.random()*(W()-size-2*pad)) + 'px';
+      s.style.top  = (60 + Math.random()*(H()-160)) + 'px'; // évite le haut et la tasse
+
+      // Survol d'un sucre = +1 point et on supprime le sucre
+      s.addEventListener('mouseenter', () => {
+        if(!running) return;
+        setScore(score + 1);
+        s.remove();
+      });
+      game.appendChild(s);
+
+      // Petit nettoyage auto au bout d'un moment (évite d'en avoir trop)
+      setTimeout(()=> s.remove(), 9000);
+    }
+
+    // --- BOUCLE DE JEU ---
+    function loop(){
+      if(!running){ cancelAnimationFrame(rafId); return; }
+      const drops = document.querySelectorAll('.drop');
+      drops.forEach(d => {
+        const y = d.offsetTop;
+        const v = parseFloat(d.dataset.speed) * speedMultiplier; // vitesse actuelle
+        d.style.top = (y + v) + 'px';
+        // Si la goutte sort de l'écran, on la supprime simplement
+        if(y > H()) d.remove();
+      });
+      rafId = requestAnimationFrame(loop);
+    }
+
+    // --- DIFFICULTÉ PROGRESSIVE ---
+    function startDifficulty(){
+      levelTimer = setInterval(()=>{
+        setLevel(level + 1);
+        speedMultiplier += 0.15;                   // tout va un peu plus vite
+        dropIntervalMs = Math.max(240, dropIntervalMs * 0.90);
+        sugarIntervalMs = Math.max(650, sugarIntervalMs * 0.95);
+        resetSpawners();                            // applique les nouveaux rythmes
+      }, 10000); // toutes les 10 secondes
+    }
+
+    // --- SPAWNERS (apparitions régulières) ---
+    function resetSpawners(){
+      clearInterval(dropTimer); clearInterval(sugarTimer);
+      dropTimer  = setInterval(spawnDrop,  dropIntervalMs);
+      sugarTimer = setInterval(spawnSugar, sugarIntervalMs);
+    }
+
+    // --- GESTION DES VIES ET FIN DE PARTIE ---
+    function loseLife(){
+      setLives(lives - 1);
+      // petit effet visuel
+      game.classList.remove('shake');
+      void game.offsetWidth; // reset anim
+      game.classList.add('shake');
+
+      if(lives <= 0){ gameOver(); }
+    }
+
+    function gameOver(){
+      running = false;
+      finalScoreEl.textContent = score;
+      overScreen.style.display = 'grid';
+
+      // stop tout
+      cancelAnimationFrame(rafId);
+      clearInterval(dropTimer); clearInterval(sugarTimer); clearInterval(levelTimer);
+    }
+
+    // --- (RE)DÉMARRAGE ---
+    function resetWorld(){
+      // Nettoie les objets existants
+      document.querySelectorAll('.drop, .sugar').forEach(el => el.remove());
+
+      // Réinitialise les valeurs
+      setScore(0); setLives(3); setLevel(1);
+      speedMultiplier = 1; dropIntervalMs = 900; sugarIntervalMs = 1100;
+    }
+
+    function start(){
+      resetWorld();
+      running = true;
+      overScreen.style.display = 'none';
+      startScreen.style.display = 'none';
+      resetSpawners();
+      startDifficulty();
+      rafId = requestAnimationFrame(loop);
+    }
+
+    // Boutons
+    document.getElementById('btnStart').addEventListener('click', start);
+    document.getElementById('btnRestart').addEventListener('click', start);
+
+    // Petite sécurité : si la fenêtre perd le focus, on évite des surprises
+    window.addEventListener('blur', ()=> running=false);
+    window.addEventListener('focus', ()=> { if(overScreen.style.display==='none' && startScreen.style.display==='none'){ running=true; rafId=requestAnimationFrame(loop);} });
+  </script>
+</body>
+</html>

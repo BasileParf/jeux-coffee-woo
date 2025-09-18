@@ -1,0 +1,126 @@
+body {
+    font-family: Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    overflow: hidden;
+    /* Le fond est maintenant sur le body pour être toujours visible */
+    background-image: url('images/background.png');
+    background-size: cover;
+    background-position: center;
+}
+
+#zone-jeu {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    /* On retire l'image de fond d'ici pour éviter un conflit avec le body */
+}
+
+/* MODIFICATION : Style "verre dépoli" pour les menus */
+#ecran-debut, #ecran-fin {
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+    padding: 20px 30px;
+    border-radius: 15px;
+    z-index: 10;
+    max-width: 400px;
+
+    /* Effet "Glassmorphism" */
+    background: rgba(255, 255, 255, 0.25);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+}
+
+#interface {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: space-between;
+    font-size: 22px;
+    color: white;
+    padding: 20px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+#tasse {
+    position: absolute;
+    bottom: 10px;
+    width: 200px;
+    height: 150px;
+    background-image: url('images/cup.png');
+    background-size: contain;
+    background-repeat: no-repeat;
+}
+
+/* MODIFICATION : Organisation du formulaire */
+#formulaire-score {
+    display: flex;
+    flex-direction: column; /* Aligne les éléments verticalement */
+    gap: 10px; /* Ajoute de l'espace entre le champ de texte et le bouton */
+    margin: 10px 0; /* Ajoute de l'espace autour du formulaire */
+}
+
+#formulaire-score input {
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    font-size: 16px;
+    text-align: center;
+}
+
+#ecran-debut button, #ecran-fin button {
+    background-color: #E2CDFF;
+    color: #442C6B;
+    border: none;
+    padding: 12px 25px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 18px;
+    font-weight: bold;
+    /* On retire la marge du haut pour la gérer avec le 'gap' du formulaire */
+    /* margin-top: 10px; */
+    transition: background-color 0.3s, transform 0.1s;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+#ecran-debut button:hover, #ecran-fin button:hover {
+    background-color: #D0B8F0;
+}
+
+#ecran-debut button:active, #ecran-fin button:active {
+    transform: scale(0.98);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.goutte, .sucre {
+    position: absolute;
+    background-size: contain;
+    background-repeat: no-repeat;
+}
+
+.goutte { width: 24px; height: 32px; background-image: url('images/drop.png'); }
+.sucre { width: 25px; height: 25px; background-image: url('images/sugar.png'); animation: spin 2s linear infinite; }
+
+.tableau-scores-conteneur {
+    margin-top: 20px;
+    padding: 10px;
+    border-radius: 8px;
+    text-align: left;
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.tableau-scores-conteneur h3 { margin-top: 0; text-align: center; }
+.tableau-scores-conteneur ol { padding-left: 25px; margin: 0; }
+.tableau-scores-conteneur li { padding: 4px 0; font-size: 16px; }
+
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }

@@ -3,58 +3,53 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Coffee Drop</title>
+    <title>WOO Champions Board</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <!-- Écran de démarrage -->
+    <!-- démarrage -->
     <div id="ecran-debut">
-        <h1>Coffee Drop</h1>
+        <h1>WOO Master Cup</h1>
         <p>Utilisez les flèches pour attraper le café et éviter les sucres !</p>
         <button id="bouton-start">Commencer</button>
         <div id="tableau-scores-debut" class="tableau-scores-conteneur">
-            <h3>Meilleurs Scores Mondiaux</h3>
+            <h3>WOO Champions Board</h3>
             <ol id="liste-scores-debut"></ol>
         </div>
     </div>
 
-    <!-- Zone de jeu principale -->
+    <!--jeu principale -->
     <div id="zone-jeu" style="display: none;">
         <div id="interface">
             <span>Score: <span id="score">0</span></span>
+            <span>Temps: <span id="timer">0.0</span>s</span>
             <span>Vies: <span id="vies">2</span></span>
         </div>
         <div id="tasse" style="left: 50%;"></div>
     </div>
 
-    <!-- Écran de fin de partie -->
+
+
+    <!-- fin partie -->
     <div id="ecran-fin" style="display: none;">
         <h2>Game Over</h2>
-        <p>Votre score final est de: <span id="score-final">0</span></p>
+        <p>Votre score : <span id="score-final">0</span> | Temps : <span id="temps-final">0.0</span>s</p>
         <form id="formulaire-score">
             <input type="text" id="nom-joueur" placeholder="Votre prénom (3 lettres min.)" required minlength="3">
             <button type="submit">Enregistrer le score</button>
         </form>
         <button id="bouton-recommencer">Recommencer</button>
         <div id="tableau-scores-fin" class="tableau-scores-conteneur">
-            <h3>Meilleurs Scores Mondiaux</h3>
+            <h3>WOO Champions Board</h3>
             <ol id="liste-scores-fin"></ol>
         </div>
     </div>
     
     
-    
-    <!-- =================================================================== -->
-    <!--     CORRECTION : On utilise la version classique et compatible de Firebase (v8)     -->
-    <!-- =================================================================== -->
-    
-    <!-- 1. On charge les bibliothèques Firebase nécessaires -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
-    <!-- 2. On initialise Firebase avec votre configuration personnelle -->
     <script>
-      // COLLEZ VOTRE OBJET "firebaseConfig" PERSONNEL ICI
       const firebaseConfig = {
         apiKey: "AIzaSyDR5l9TCo7mZVCoPXD5pEpFEF0jbhPv8ZE",
         authDomain: "coffee-ccd1e.firebaseapp.com",
@@ -64,11 +59,9 @@
         appId: "1:909979949461:web:c80458902588ee66ba3e9c"
       };
       
-      // Cette ligne initialise Firebase et le rend disponible pour notre script.js
       firebase.initializeApp(firebaseConfig);
     </script>
     
-    <!-- 3. Notre fichier de jeu est chargé en DERNIER, une fois que Firebase est prêt -->
     <script src="script.js"></script>
 
 </body>

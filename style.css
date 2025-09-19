@@ -6,7 +6,6 @@ body {
     height: 100vh;
     margin: 0;
     overflow: hidden;
-    /* Le fond est maintenant sur le body pour être toujours visible */
     background-image: url('images/background.png');
     background-size: cover;
     background-position: center;
@@ -19,10 +18,8 @@ body {
     width: 100vw;
     height: 100vh;
     overflow: hidden;
-    /* On retire l'image de fond d'ici pour éviter un conflit avec le body */
 }
 
-/* MODIFICATION : Style "verre dépoli" pour les menus */
 #ecran-debut, #ecran-fin {
     display: flex;
     flex-direction: column;
@@ -31,8 +28,6 @@ body {
     border-radius: 15px;
     z-index: 10;
     max-width: 400px;
-
-    /* Effet "Glassmorphism" */
     background: rgba(255, 255, 255, 0.25);
     backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.18);
@@ -47,9 +42,8 @@ body {
     display: flex;
     justify-content: space-between;
     font-size: 22px;
-    color: white;
+    color: #EB8100;
     padding: 20px;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
 }
 
 #tasse {
@@ -60,14 +54,14 @@ body {
     background-image: url('images/cup3.png');
     background-size: contain;
     background-repeat: no-repeat;
+    transition: transform 0.1s linear;
 }
 
-/* MODIFICATION : Organisation du formulaire */
 #formulaire-score {
     display: flex;
-    flex-direction: column; /* Aligne les éléments verticalement */
-    gap: 10px; /* Ajoute de l'espace entre le champ de texte et le bouton */
-    margin: 10px 0; /* Ajoute de l'espace autour du formulaire */
+    flex-direction: column; 
+    gap: 10px; 
+    margin: 10px 0; 
 }
 
 #formulaire-score input {
@@ -87,8 +81,6 @@ body {
     cursor: pointer;
     font-size: 18px;
     font-weight: bold;
-    /* On retire la marge du haut pour la gérer avec le 'gap' du formulaire */
-    /* margin-top: 10px; */
     transition: background-color 0.3s, transform 0.1s;
     box-shadow: 0 4px 6px rgba(0,0,0,0.1);
 }

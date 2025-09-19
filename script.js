@@ -1,30 +1,30 @@
-// --- ÉLÉMENTS DU DOM ET VARIABLES DU JEU ---
 const ecranDebut = document.getElementById('ecran-debut');
 const ecranFin = document.getElementById('ecran-fin');
 const zoneJeu = document.getElementById('zone-jeu');
 const tasse = document.getElementById('tasse');
 const scoreAffiche = document.getElementById('score');
 const viesAffiche = document.getElementById('vies');
+const timerAffiche = document.getElementById('timer');
 const scoreFinalAffiche = document.getElementById('score-final');
+const tempsFinalAffiche = document.getElementById('temps-final');
 const boutonStart = document.getElementById('bouton-start');
 const boutonRecommencer = document.getElementById('bouton-recommencer');
 const formulaireScore = document.getElementById('formulaire-score');
 const listeScoresDebut = document.getElementById('liste-scores-debut');
 const listeScoresFin = document.getElementById('liste-scores-fin');
 
-// On accède à Firebase, qui est initialisé dans l'HTML
 const db = firebase.firestore();
 
-let score = 0, vies, vitesseChute, intervalleJeu, intervalleChute;
-let vitesseTasse = 20; 
+let score = 0, vies, vitesseChute, intervalleJeu, intervalleChute, tempsDecisecondes, intervalleTemps;
+let vitesseTasse = 35; 
 let mouvementGauche = false, mouvementDroite = false;
 
-// --- GESTION DU TABLEAU DES SCORES (AVEC FIREBASE) ---
+
 async function afficherScores() {
     listeScoresDebut.innerHTML = "<li>Chargement...</li>";
     listeScoresFin.innerHTML = "<li>Chargement...</li>";
     try {
-        const scoresRef = db.collection('scores').orderBy('score', 'desc').limit(10);
+        const scoresRef = db.collection('scores').orderBy('score', 'desc').orderBy('temps', 'desc').limit(10);
         const snapshot = await scoresRef.get();
         listeScoresDebut.innerHTML = '';
         listeScoresFin.innerHTML = '';
@@ -36,7 +36,8 @@ async function afficherScores() {
             snapshot.forEach(doc => {
                 const data = doc.data();
                 const elementScore = document.createElement('li');
-                elementScore.textContent = `${data.nom} - ${data.score}`;
+                const tempsJeu = data.temps || 0;
+                elementScore.textContent = `${data.nom} - ${data.score} (${tempsJeu.toFixed(1)}s)`;
                 listeScoresDebut.appendChild(elementScore);
                 listeScoresFin.appendChild(elementScore.cloneNode(true));
             });
@@ -49,11 +50,12 @@ async function afficherScores() {
     }
 }
 
-async function sauvegarderScore(nom, score) {
+async function sauvegarderScore(nom, score, tempsFinal) {
     try {
         await db.collection('scores').add({
             nom: nom,
             score: score,
+            temps: tempsFinal,
             date: new Date()
         });
     } catch (error) {
@@ -61,7 +63,6 @@ async function sauvegarderScore(nom, score) {
     }
 }
 
-// --- LOGIQUE PRINCIPALE DU JEU ---
 boutonStart.addEventListener('click', () => {
     ecranDebut.style.display = 'none';
     zoneJeu.style.display = 'block';
@@ -76,21 +77,33 @@ boutonRecommencer.addEventListener('click', () => {
 });
 
 function demarrerJeu() {
-    score = 0; vies = 2; vitesseChute = 5; 
+    score = 0; vies = 2; vitesseChute = 5; tempsDecisecondes = 0;
     scoreAffiche.textContent = score;
     viesAffiche.textContent = vies;
+    timerAffiche.textContent = (tempsDecisecondes / 10).toFixed(1);
     tasse.style.left = `${(zoneJeu.clientWidth / 2) - (tasse.clientWidth / 2)}px`;
     mouvementGauche = false; mouvementDroite = false;
+
     intervalleJeu = setInterval(boucleJeu, 20);
-    intervalleChute = setInterval(genererVagueDObjets, 600); 
+    intervalleChute = setInterval(genererVagueDObjets, 750); 
+    
+    intervalleTemps = setInterval(() => {
+        tempsDecisecondes++;
+        timerAffiche.textContent = (tempsDecisecondes / 10).toFixed(1);
+    }, 100);
 }
 
 function finDePartie() {
     clearInterval(intervalleJeu);
     clearInterval(intervalleChute);
+    clearInterval(intervalleTemps); 
+    
     zoneJeu.style.display = 'none';
     ecranFin.style.display = 'block';
+
     scoreFinalAffiche.textContent = score;
+    tempsFinalAffiche.textContent = (tempsDecisecondes / 10).toFixed(1);
+    
     afficherScores();
     document.querySelectorAll('.goutte, .sucre').forEach(e => e.remove());
 }
@@ -108,9 +121,6 @@ function creerUnObjet() {
 
 function genererVagueDObjets() {
     creerUnObjet();
-    if (Math.random() < 0.25) {
-        creerUnObjet(); 
-    }
 }
 
 function boucleJeu() {
@@ -139,6 +149,14 @@ function deplacerTasse() {
     if (mouvementDroite && (positionActuelle + tasse.clientWidth) < limiteDroite) {
         tasse.style.left = `${positionActuelle + vitesseTasse}px`;
     }
+
+    if (mouvementGauche && !mouvementDroite) {
+        tasse.style.transform = 'rotate(15deg)';
+    } else if (mouvementDroite && !mouvementGauche) {
+        tasse.style.transform = 'rotate(-15deg)';
+    } else {
+        tasse.style.transform = 'rotate(0deg)';
+    }
 }
 
 document.addEventListener('keydown', e => {
@@ -159,8 +177,7 @@ function verifierCollisions() {
             if (objet.classList.contains('goutte')) {
                 score++;
                 scoreAffiche.textContent = score;
-                // MODIFICATION : La vitesse augmente maintenant deux fois plus vite !
-                vitesseChute += 0.3; 
+                vitesseChute += 1.5; 
             } else {
                 vies--;
                 viesAffiche.textContent = vies;
@@ -174,7 +191,7 @@ function verifierCollisions() {
 formulaireScore.addEventListener('submit', async e => {
     e.preventDefault();
     const nom = document.getElementById('nom-joueur').value;
-    await sauvegarderScore(nom, score);
+    await sauvegarderScore(nom, score, tempsDecisecondes / 10);
     await afficherScores();
     alert(`Merci ${nom}, votre score a été enregistré !`);
     formulaireScore.style.display = 'none';

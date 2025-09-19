@@ -57,7 +57,7 @@ body {
     bottom: 10px;
     width: 200px;
     height: 150px;
-    background-image: url('images/cup.png');
+    background-image: url('images/cup3.png');
     background-size: contain;
     background-repeat: no-repeat;
 }
@@ -108,7 +108,7 @@ body {
     background-repeat: no-repeat;
 }
 
-.goutte { width: 24px; height: 32px; background-image: url('images/drop.png'); }
+.goutte { width: 24px; height: 32px; background-image: url('images/drop2.png'); }
 .sucre { width: 25px; height: 25px; background-image: url('images/sugar.png'); animation: spin 2s linear infinite; }
 
 .tableau-scores-conteneur {

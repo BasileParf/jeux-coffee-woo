@@ -6,7 +6,7 @@ body {
     height: 100vh;
     margin: 0;
     overflow: hidden;
-    background-image: url('images/background.png');
+    background-color: url('images/background.png');
     background-size: cover;
     background-position: center;
 }
@@ -116,3 +116,37 @@ body {
 .tableau-scores-conteneur li { padding: 4px 0; font-size: 16px; }
 
 @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+/* NOUVEAU : Styles pour les contrôles mobiles */
+#controles-mobiles {
+    display: none; /* Cachés par défaut sur grand écran */
+    position: absolute;
+    bottom: 20px;
+    left: 0;
+    width: 100%;
+    justify-content: space-between;
+    padding: 0 20px;
+    box-sizing: border-box;
+    z-index: 20;
+}
+
+#controles-mobiles button {
+    background-color: rgba(226, 205, 255, 0.5); /* Semi-transparent */
+    color: #442C6B;
+    border: 2px solid #442C6B;
+    width: 70px;
+    height: 70px;
+    border-radius: 50%; /* Ronds */
+    cursor: pointer;
+    font-size: 36px;
+    font-weight: bold;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+    user-select: none; /* Empêche la sélection de texte sur appui long */
+}
+
+/* NOUVEAU : Media query pour afficher les contrôles sur les petits écrans */
+@media (max-width: 768px) {
+    #controles-mobiles {
+        display: flex;
+    }
+}

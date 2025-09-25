@@ -13,10 +13,13 @@ const formulaireScore = document.getElementById('formulaire-score');
 const listeScoresDebut = document.getElementById('liste-scores-debut');
 const listeScoresFin = document.getElementById('liste-scores-fin');
 
+const boutonGaucheMobile = document.getElementById('bouton-gauche');
+const boutonDroiteMobile = document.getElementById('bouton-droite');
+
 const db = firebase.firestore();
 
-let score = 0, vies, vitesseChute, intervalleJeu, intervalleChute, tempsDecisecondes, intervalleTemps;
-let vitesseTasse = 35; 
+let score = 0, vies, intervalleJeu, intervalleChute, tempsDecisecondes, intervalleTemps;
+let vitesseTasse; 
 let mouvementGauche = false, mouvementDroite = false;
 
 
@@ -77,7 +80,14 @@ boutonRecommencer.addEventListener('click', () => {
 });
 
 function demarrerJeu() {
-    score = 0; vies = 2; vitesseChute = 5; tempsDecisecondes = 0;
+    const estSurMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    if (estSurMobile) {
+        vitesseTasse = 1; 
+    } else {
+        vitesseTasse = 35;
+    }
+
+    score = 0; vies = 2; tempsDecisecondes = 0;
     scoreAffiche.textContent = score;
     viesAffiche.textContent = vies;
     timerAffiche.textContent = (tempsDecisecondes / 10).toFixed(1);
@@ -130,6 +140,8 @@ function boucleJeu() {
 }
 
 function deplacerObjets() {
+    const vitesseChute = 5 + (score * 0.5) + (tempsDecisecondes / 100);
+
     document.querySelectorAll('.goutte, .sucre').forEach(objet => {
         const top = parseFloat(objet.style.top);
         if (top > zoneJeu.clientHeight) objet.remove();
@@ -159,15 +171,36 @@ function deplacerTasse() {
     }
 }
 
+// --- GESTION DES CONTRÔLES ---
+
 document.addEventListener('keydown', e => {
-    if (e.key === 'ArrowLeft') mouvementGauche = true;
-    else if (e.key === 'ArrowRight') mouvementDroite = true;
+    if (e.key === 'ArrowLeft') {
+        mouvementGauche = true;
+        e.preventDefault();
+    } else if (e.key === 'ArrowRight') {
+        mouvementDroite = true;
+        e.preventDefault();
+    }
 });
 
 document.addEventListener('keyup', e => {
     if (e.key === 'ArrowLeft') mouvementGauche = false;
     else if (e.key === 'ArrowRight') mouvementDroite = false;
 });
+
+boutonGaucheMobile.addEventListener('touchstart', e => { e.preventDefault(); mouvementGauche = true; });
+boutonGaucheMobile.addEventListener('mousedown', e => { e.preventDefault(); mouvementGauche = true; });
+boutonGaucheMobile.addEventListener('touchend', e => { e.preventDefault(); mouvementGauche = false; });
+boutonGaucheMobile.addEventListener('mouseup', e => { e.preventDefault(); mouvementGauche = false; });
+boutonGaucheMobile.addEventListener('mouseleave', e => { e.preventDefault(); mouvementGauche = false; });
+
+
+boutonDroiteMobile.addEventListener('touchstart', e => { e.preventDefault(); mouvementDroite = true; });
+boutonDroiteMobile.addEventListener('mousedown', e => { e.preventDefault(); mouvementDroite = true; });
+boutonDroiteMobile.addEventListener('touchend', e => { e.preventDefault(); mouvementDroite = false; });
+boutonDroiteMobile.addEventListener('mouseup', e => { e.preventDefault(); mouvementDroite = false; });
+boutonDroiteMobile.addEventListener('mouseleave', e => { e.preventDefault(); mouvementDroite = false; });
+
 
 function verifierCollisions() {
     const rectTasse = tasse.getBoundingClientRect();
@@ -177,7 +210,6 @@ function verifierCollisions() {
             if (objet.classList.contains('goutte')) {
                 score++;
                 scoreAffiche.textContent = score;
-                vitesseChute += 1.5; 
             } else {
                 vies--;
                 viesAffiche.textContent = vies;

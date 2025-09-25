@@ -18,7 +18,7 @@
         </div>
     </div>
  
-    <!--jeu principale -->
+    <!-- jeu principale -->
     <div id="zone-jeu" style="display: none;">
         <div id="interface">
             <span>Score: <span id="score">0</span></span>
@@ -26,9 +26,12 @@
             <span>Vies: <span id="vies">2</span></span>
         </div>
         <div id="tasse" style="left: 50%;"></div>
+
+        <div id="controles-mobiles">
+            <button id="bouton-gauche">&larr;</button>
+            <button id="bouton-droite">&rarr;</button>
+        </div>
     </div>
-
-
 
     <!-- fin partie -->
     <div id="ecran-fin" style="display: none;">
@@ -45,20 +48,19 @@
         </div>
     </div>
     
-    
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
     <script>
-      const firebaseConfig = {
-        apiKey: "AIzaSyDR5l9TCo7mZVCoPXD5pEpFEF0jbhPv8ZE",
-        authDomain: "coffee-ccd1e.firebaseapp.com",
-        projectId: "coffee-ccd1e",
-        storageBucket: "coffee-ccd1e.firebasestorage.app",
-        messagingSenderId: "909979949461",
-        appId: "1:909979949461:web:c80458902588ee66ba3e9c"
-      };
-      
+          const firebaseConfig = {
+            apiKey: "AIzaSyDR5l9TCo7mZVCoPXD5pEpFEF0jbhPv8ZE",
+            authDomain: "coffee-ccd1e.firebaseapp.com",
+            projectId: "coffee-ccd1e",
+            storageBucket: "coffee-ccd1e.firebasestorage.app",
+            messagingSenderId: "909979949461",
+            appId: "1:909979949461:web:a7ab5144b491c161ba3e9c"
+    };
+            
       firebase.initializeApp(firebaseConfig);
     </script>
     

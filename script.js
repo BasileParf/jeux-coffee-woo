@@ -12,11 +12,16 @@ const boutonRecommencer = document.getElementById('bouton-recommencer');
 const formulaireScore = document.getElementById('formulaire-score');
 const listeScoresDebut = document.getElementById('liste-scores-debut');
 const listeScoresFin = document.getElementById('liste-scores-fin');
+const limiteBasse = document.getElementById('limite-basse');
 
 const boutonGaucheMobile = document.getElementById('bouton-gauche');
 const boutonDroiteMobile = document.getElementById('bouton-droite');
 
 const db = firebase.firestore();
+
+const HAUTEUR_JEU_MAX = 900;
+const HAUTEUR_MINIMALE_BARRE = 30;
+let hauteurJeuActuelle;
 
 let score = 0, vies, intervalleJeu, intervalleChute, tempsDecisecondes, intervalleTemps;
 let vitesseTasse; 
@@ -53,18 +58,48 @@ async function afficherScores() {
     }
 }
 
+// --- MODIFIÉ : La fonction gère maintenant les scores existants ---
 async function sauvegarderScore(nom, score, tempsFinal) {
+    const scoresRef = db.collection('scores');
+    
+    // Étape 1 : Chercher si un score existe déjà pour ce nom (sensible à la casse)
+    const query = scoresRef.where('nom', '==', nom).limit(1);
+    
     try {
-        await db.collection('scores').add({
-            nom: nom,
-            score: score,
-            temps: tempsFinal,
-            date: new Date()
-        });
+        const snapshot = await query.get();
+
+        if (snapshot.empty) {
+            // Cas 1 : Aucun score n'existe pour ce joueur. On l'ajoute simplement.
+            await scoresRef.add({
+                nom: nom,
+                score: score,
+                temps: tempsFinal,
+                date: new Date()
+            });
+            console.log(`Nouveau score pour ${nom} enregistré.`);
+        } else {
+            // Cas 2 : Un score existe déjà.
+            const docExistant = snapshot.docs[0];
+            const scoreExistant = docExistant.data().score;
+
+            if (score > scoreExistant) {
+                // Le nouveau score est meilleur, on met à jour le document existant.
+                await scoresRef.doc(docExistant.id).update({
+                    score: score,
+                    temps: tempsFinal,
+                    date: new Date()
+                });
+                console.log(`Meilleur score pour ${nom} mis à jour.`);
+            } else {
+                // Le score existant est meilleur ou égal, on ne fait rien.
+                console.log(`Le score existant pour ${nom} est meilleur ou égal. Pas de mise à jour.`);
+            }
+        }
     } catch (error) {
-        console.error("Erreur d'enregistrement du score:", error);
+        console.error("Erreur lors de la sauvegarde du score :", error);
     }
 }
+
 
 boutonStart.addEventListener('click', () => {
     ecranDebut.style.display = 'none';
@@ -80,6 +115,7 @@ boutonRecommencer.addEventListener('click', () => {
 });
 
 function demarrerJeu() {
+    ajusterAffichage(); 
     const estSurMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
     if (estSurMobile) {
         vitesseTasse = 1; 
@@ -144,8 +180,12 @@ function deplacerObjets() {
 
     document.querySelectorAll('.goutte, .sucre').forEach(objet => {
         const top = parseFloat(objet.style.top);
-        if (top > zoneJeu.clientHeight) objet.remove();
-        else objet.style.top = `${top + vitesseChute}px`;
+        
+        if (top > hauteurJeuActuelle) {
+            objet.remove();
+        } else {
+            objet.style.top = `${top + vitesseChute}px`;
+        }
     });
 }
 
@@ -172,7 +212,6 @@ function deplacerTasse() {
 }
 
 // --- GESTION DES CONTRÔLES ---
-
 document.addEventListener('keydown', e => {
     if (e.key === 'ArrowLeft') {
         mouvementGauche = true;
@@ -210,15 +249,40 @@ function verifierCollisions() {
             if (objet.classList.contains('goutte')) {
                 score++;
                 scoreAffiche.textContent = score;
+                creerAnimationScore('+1', rectTasse);
             } else {
                 vies--;
                 viesAffiche.textContent = vies;
+                creerAnimationScore('-1', rectTasse);
             }
             objet.remove();
             if (vies <= 0) finDePartie();
         }
     });
 }
+
+function creerAnimationScore(texte, rectTasse) {
+    const anim = document.createElement('div');
+    anim.className = 'animation-score';
+    anim.textContent = texte;
+
+    if (texte === '+1') {
+        anim.style.color = '#EB8100';
+    } else {
+        anim.style.color = '#D80032';
+    }
+
+    const decalageX = (Math.random() - 0.5) * 60;
+    anim.style.left = `${rectTasse.left + (rectTasse.width / 2) + decalageX}px`;
+    anim.style.top = `${rectTasse.top}px`;
+
+    zoneJeu.appendChild(anim);
+
+    setTimeout(() => {
+        anim.remove();
+    }, 1000);
+}
+
 
 formulaireScore.addEventListener('submit', async e => {
     e.preventDefault();
@@ -229,5 +293,17 @@ formulaireScore.addEventListener('submit', async e => {
     formulaireScore.style.display = 'none';
 });
 
+function ajusterAffichage() {
+    const hauteurFenetre = window.innerHeight;
+    const espaceSupplementaire = Math.max(0, hauteurFenetre - HAUTEUR_JEU_MAX);
+    const hauteurLimiteBasse = HAUTEUR_MINIMALE_BARRE + espaceSupplementaire;
+    hauteurJeuActuelle = hauteurFenetre - hauteurLimiteBasse;
+    limiteBasse.style.height = `${hauteurLimiteBasse}px`;
+    tasse.style.bottom = `${hauteurLimiteBasse}px`;
+}
+
+
 // --- INITIALISATION ---
+window.addEventListener('resize', ajusterAffichage); 
+ajusterAffichage(); 
 afficherScores();

@@ -12,11 +12,11 @@ body {
 }
 
 #zone-jeu {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100vw;
+    position: relative; 
+    width: 100%;
+    max-width: 1600px;
     height: 100vh;
+    margin: 0 auto; 
     overflow: hidden;
 }
 
@@ -48,14 +48,31 @@ body {
 
 #tasse {
     position: absolute;
-    bottom: 10px;
+    /* MODIFIÉ : Toujours positionné par le bas. La valeur sera ajustée par JS. */
+    bottom: 0px; 
     width: 200px;
     height: 150px;
     background-image: url('images/cup3.png');
     background-size: contain;
     background-repeat: no-repeat;
     transition: transform 0.1s linear;
+    z-index: 10;
 }
+
+#limite-basse {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    left: 0;
+    background-image: url('images/bar.png');
+    background-size: cover;
+    /* MODIFIÉ : L'image est maintenant ancrée par son sommet. */
+    background-position: center top;
+    background-repeat: no-repeat;
+    z-index: 5;
+}
+
+
 
 #formulaire-score {
     display: flex;
@@ -117,9 +134,9 @@ body {
 
 @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
-/* NOUVEAU : Styles pour les contrôles mobiles */
+/* Styles pour les contrôles mobiles */
 #controles-mobiles {
-    display: none; /* Cachés par défaut sur grand écran */
+    display: none; 
     position: absolute;
     bottom: 20px;
     left: 0;
@@ -130,23 +147,50 @@ body {
     z-index: 20;
 }
 
+
 #controles-mobiles button {
-    background-color: rgba(226, 205, 255, 0.5); /* Semi-transparent */
+    background-color: rgba(226, 205, 255, 0.5); 
     color: #442C6B;
     border: 2px solid #442C6B;
     width: 70px;
     height: 70px;
-    border-radius: 50%; /* Ronds */
+    border-radius: 50%; 
     cursor: pointer;
     font-size: 36px;
     font-weight: bold;
     box-shadow: 0 4px 6px rgba(0,0,0,0.2);
-    user-select: none; /* Empêche la sélection de texte sur appui long */
+    user-select: none;
 }
 
-/* NOUVEAU : Media query pour afficher les contrôles sur les petits écrans */
 @media (max-width: 768px) {
     #controles-mobiles {
         display: flex;
+    }
+}
+
+
+
+/* NOUVEAU : Style pour l'animation de score */
+.animation-score {
+    position: absolute;
+    font-size: 28px;
+    font-weight: bold;
+    color: white;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+    user-select: none;
+    pointer-events: none;
+    z-index: 100;
+    animation: flotterEtDisparaitre 1s forwards;
+}
+
+/* NOUVEAU : Animation de flottement et disparition */
+@keyframes flotterEtDisparaitre {
+    from {
+        transform: translateY(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateY(-50px);
+        opacity: 0;
     }
 }
